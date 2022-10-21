@@ -1,11 +1,11 @@
 param(
   [Parameter(ValueFromRemainingArguments=$True, position=0)]
-  [alias("path")]$pathes,                             # all unnames Parameter
-  [switch]$c=$false,                                  # bytes count
-  [Parameter(ValueFromPipeline=$true)][String[]]$txt, # pipelined input
-  [switch]$m=$false,                                  # chars count
-  [switch]$l=$false,                                  # lines count
-  [switch]$w=$false                                   # words count
+  [alias("path")]$pathes,  # all unnames Parameter
+  [switch]$c=$false,       # bytes count
+  [Parameter(ValueFromPipeline=$true)][String[]]$txt, 
+  [switch]$m=$false,       # chars count
+  [switch]$l=$false,       # lines count
+  [switch]$w=$false        # words count
 )
 
 begin{
@@ -69,7 +69,7 @@ end{
         # Length would be the string length.
         # Count would be 1 for String and number of elements for Array.
         $lines = $contents.count
-        $all = $contents | select-string -allmatches -pattern "[^\s]+" 
+        $all = $contents | select-string -allmatches -pattern "[^\s]+"
         $words = $all.matches.length
         $contents = get-content -raw -path $filename
         $chars = $contents.length
@@ -111,5 +111,7 @@ end{
   if($m) {$txt += "{0, $wChar}" -F $totalChars}
   if($c) {$txt += "{0, $wByte}" -F $totalBytes}
   if($allPathes.count -gt 1) {$txt += " total"}
-  if(($allPathes.count -gt 1) -or ($totalLines -gt 0)) {write-host $txt}
+  if(($allPathes.count -gt 1) -or ($totalLines -gt 0)) {
+    write-host $txt
+  }
 }
