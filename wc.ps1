@@ -9,7 +9,6 @@ param(
 )
 
 begin{
-  $totalLines = $totalWords = $totalChars = $totalBytes = 0 
   $allLines = $allChars = $allBytes = $allWords = @()
   $lines = $words = $chars = $bytes = 0
   if(-not ($m -or $c -or $l -or $w)) {  # no switches on
@@ -20,6 +19,7 @@ begin{
 process{
   if($pathes.count -eq 0) { # if no pathes specified
     if($txt.count -gt 0) {  # check if there's any pipelined input
+      $txt[0] += [Environment]::NewLine
       $lines += 1
       $chars += $txt[0].length
       $all = $txt[0] | select-string -allmatches -pattern "[^\s]+" 
@@ -28,9 +28,9 @@ process{
         $enc = $PSDefaultParameterValues['Out-File:Encoding']
       }
       else {
-        $enc = [System.Text.ASCIIEncoding]::UTF8
+        $enc = [System.Text.Encoding]::UTF8
       }
-      $bytesCurrLine = $enc.getbytecount($txt[0] + "`n")
+      $bytesCurrLine = $enc.getbytecount($txt[0])
       $bytes += $bytesCurrLine
     }
   }
@@ -48,10 +48,6 @@ end{
   }
 
   if($pathes.count -eq 0) { # if no pathes specified
-    $totalBytes += $bytes
-    $totalChars += $chars
-    $totalWords += $words
-    $totalLines += $lines
     $allBytes += $bytes
     $allWords += $words
     $allLines += $lines
