@@ -13,18 +13,9 @@ param(
 # collection.
 
 begin{
-  $totalLines = 0 
-  $totalWords = 0 
-  $totalChars = 0 
-  $totalBytes = 0 
-  $allLines = @()
-  $allChars = @()
-  $allBytes = @()
-  $allWords = @()
-  $lines = 0
-  $words = 0
-  $chars = 0
-  $bytes = 0
+  $totalLines = $totalWords = $totalChars = $totalBytes = 0 
+  $allLines = $allChars = $allBytes = $allWords = @()
+  $lines = $words = $chars = $bytes = 0
   if(-not ($m -or $c -or $l -or $w)) {  # no switches on
     $c = $l = $w = $true   # enable default swtches
   }
@@ -63,9 +54,11 @@ end{
     # "{0} {1} {2} {3}" -F $lines, $words, $chars, $bytes
   }
   else {
-    foreach($filename in $pathes) {
-      $lines = $chars = $words = $bytes = -1
-      if(test-path $filename) {
+    $allPathes = @()
+    foreach($path in $pathes) { $allPathes += get-item $path }
+    foreach($filename in $allPathes) {
+      $lines = $chars = $words = $bytes = 0
+      if(test-path -pathtype leaf $filename) {
         $bytes = (get-item $filename).length
         $contents = get-content -path $filename
         # if only 1 line, $contents would be a String, 
@@ -76,11 +69,6 @@ end{
         $words = $all.matches.length
         $contents = get-content -raw -path $filename
         $chars = $contents.length
-        # "{0} {1} {2} {3} {4}" -F $lines, $words, $chars, $bytes, $filename
-        $totalBytes += $bytes
-        $totalChars += $chars
-        $totalWords += $words
-        $totalLines += $lines
       }
       $allBytes += $bytes
       $allWords += $words
@@ -88,14 +76,22 @@ end{
       $allChars += $chars
     }
   }
+  $totalBytes = ($allBytes | measure-object -sum).sum 
+  $totalChars = ($allChars | measure-object -sum).sum 
+  $totalWords = ($allWords | measure-object -sum).sum 
+  $totalLines = ($allLines | measure-object -sum).sum 
   $wLine = ([math]::floor([math]::Log([math]::max($totalLines, 1), 10)) + 1) + 2
   $wWord = ([math]::floor([math]::Log([math]::max($totalWords, 1), 10)) + 1) + 1
   $wChar = ([math]::floor([math]::Log([math]::max($totalChars, 1), 10)) + 1) + 1
   $wByte = ([math]::floor([math]::Log([math]::max($totalBytes, 1), 10)) + 1) + 1
 
-  for($i = 0; $i -lt $allLines.count;$i++) {
-    if($allLines[$i] -eq -1) { 
-      "wc: {0}: No such file or directory" -F $pathes[$i]
+  for($i = 0; $i -lt $allPathes.count;$i++) {
+    if(test-path -pathtype container $allPathes[$i]) { 
+      "wc: {0}: Is a directory" -F $allPathes[$i].name
+      continue
+    }
+    if(-not (test-path $allPathes[$i])) { 
+      "wc: {0}: No such file or directory" -F $allPathes[$i].name
       continue
     }
     $txt = ""
@@ -103,7 +99,7 @@ end{
     if($w) {$txt += "{0, $wWord}" -F $allWords[$i]}
     if($m) {$txt += "{0, $wChar}" -F $allChars[$i]}
     if($c) {$txt += "{0, $wByte}" -F $allBytes[$i]}
-    if($pathes.count -gt 0) {$txt += " {0}" -F $pathes[$i]}
+    if($pathes.count -gt 0) {$txt += " {0}" -F $allPathes[$i].name}
     write-host $txt
   }
   if($allLines.count -gt 1) {
