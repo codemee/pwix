@@ -44,15 +44,21 @@ process{
 }
 
 end{
-  foreach($filename in $pathes) {
-    if(test-path $filename) {
-      $contents = get-content -path $filename
-      foreach($currline in $contents) {
-        printLine $currline 
+  foreach($path in $pathes) {
+    $allPathes = get-item $path
+    foreach($filename in $allPathes) {
+      if(test-path -pathtype leaf $filename) {
+        $contents = get-content -path $filename
+        foreach($currline in $contents) {
+          printLine $currline 
+        }
       }
-    }
-    else {
-      write-error ("nl :{0}: No such file." -f $filename)
+      elseif (test-path -pathtype container $filename){
+        write-error ("nl :{0}: Is a directory" -f $filename)
+      }
+      else {
+        write-error ("nl :{0}: No such file" -f $filename)
+      }
     }
   }
 }
